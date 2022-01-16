@@ -1,6 +1,8 @@
 const NUM_WAYPOINTS = 20;
 
 const anchors = [];
+const transforms = [];
+const paths = [];
 
 var ringPos = [{x:72, y:[6, 12, 18, 24, 48, 54, 60, 84, 90, 96, 120, 126, 132, 138]}, {x:48, y:[43.5, 48, 52.5, 67.5, 72, 76.5, 120]}, {x: 96, y:[24, 67.5, 72, 76.5, 91.5, 96, 100.5]}, 
 {x:43.5, y:[48, 72]}, {x:52.5, y:[48, 72]}, {x:91.5, y:[72, 96]}, {x:100.5, y:[72, 96]}, {x: 54, y: [120]}, {x:60, y:[120]}, {x:66, y:[120]}, {x: 78, y: [24]}, {x:84, y: [24]}, {x:90, y:[24]}];
@@ -69,7 +71,7 @@ var path = new Konva.Line({
 
 var pathAnchor = new Konva.Circle({
     radius: 10, 
-    fill: 'red',
+    fill: '#E27D60',
     draggable: 'true',
     rotation: 90,
 })
@@ -152,6 +154,7 @@ fieldLayer.add(platform.clone({x: field.x() + field.width()*122/144, y: field.y(
 //Perimeter
 fieldLayer.add(field);
 
+
 //Simple path
 var pathPoints = drawPath(fieldX(12), fieldY(108), 0, fieldX(60), fieldY(90), 0);
 var path1  = path.clone({points: pathPoints})
@@ -178,6 +181,8 @@ anchor1.on('click', function(){toggleVis(tr1)});
 anchor2.on('click', function(){toggleVis(tr2)});
 
 anchors.push(anchor1, anchor2);
+transforms.push(tr1, tr2);
+paths.push(path1);
 
 tr1.on('transform', function(){updatePath(path1, anchor1, anchor2)});
 tr2.on('transform', function(){updatePath(path1, anchor1, anchor2)});
@@ -194,6 +199,9 @@ anchor2.on('dragmove', function(){
 function updatePath(pathI, anchor1I, anchor2I){
     pathI.points(drawPath(anchor1I.x(), anchor1I.y(), anchor1I.rotation()-90, anchor2I.x(), anchor2I.y(), anchor2I.rotation()-90));
 }
+function updateSimplePath(pathI, anchor1I, anchor2I){
+    pathI.points([anchor1I.x(), anchor1I.y(), anchor2I.x(), anchor2I.y()]);
+}
 
 function toggleVis(x){
     if(x.visible() == true){
@@ -206,6 +214,7 @@ function toggleVis(x){
     }
 }
 
+
 function addPath(){
     var newAnchor = pathAnchor.clone({x:anchors[anchors.length-1].x() + 30, y: anchors[anchors.length-1].y()});
     var newTr = new Konva.Transformer({
@@ -215,23 +224,77 @@ function addPath(){
     })
     var newPath = path.clone();
     anchors.push(newAnchor);
+    transforms.push(newTr);
+    paths.push(newPath);
     updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);
     newAnchor.on('click', function(){toggleVis(newTr)});
     newAnchor.on('dragmove', function(){updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
     anchors[anchors.indexOf(newAnchor)-1].on('dragmove', function(){updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
+    transforms[transforms.indexOf(newTr)-1].on('transform', function(){updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
     newTr.on('transform', function(){updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor)});
+    pathLayer.add(newPath);
+    newPath.moveToBottom();
     pathLayer.add(newAnchor);
     pathLayer.add(newTr);
-    pathLayer.add(newPath);
 }
 
+function addSimplePath(){
+    var newAnchor = pathAnchor.clone({x:anchors[anchors.length-1].x() + 30, y: anchors[anchors.length-1].y()});
+    var newTr = new Konva.Transformer({
+        nodes: [newAnchor],
+        visible: false,
+        resizeEnabled: false,
+    })
+    var newPath = path.clone();
+    anchors.push(newAnchor);
+    transforms.push(newTr);
+    paths.push(newPath);
+    updateSimplePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor)
+    newAnchor.on('click', function(){toggleVis(newTr)});
+    newAnchor.on('dragmove', function(){updateSimplePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
+    anchors[anchors.indexOf(newAnchor)-1].on('dragmove', function(){updateSimplePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
+    transforms[transforms.indexOf(newTr)-1].on('transform', function(){updateSimplePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
+    newTr.on('transform', function(){updateSimplePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor)});
+    pathLayer.add(newPath);
+    newPath.moveToBottom();
+    pathLayer.add(newAnchor);
+    pathLayer.add(newTr);
+}
+
+function copyPaths() {
+     /* Copy the text inside the text field */
+    let pathString = "";
+    for(const p of paths){
+        for(let i = 0; i < p.points().length; i+=2){
+            pathString += p.points()[i] + " " + p.points()[i+1] + ";";
+        }
+    }
+    navigator.clipboard.writeText(pathString);
+  
+    /* Alert the copied text */
+    alert("Copied the text: " + pathString);
+}
+
+function downloadObjectAsJson(){
+    let exportObj = {waypoints: []};
+    for(const a of anchors){
+        exportObj.waypoints.push({x: a.x(), y: a.y(), r: a.rotation()});
+    }
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+    var downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href",     dataStr);
+    downloadAnchorNode.setAttribute("download", "Waypoints.json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
 
 //animLayer.add(blueHex, yellowHex, redHex);
 stage.add(fieldLayer);
 stage.add(staticLayer);
 stage.add(pathLayer);
 
-var save = stage.toJSON();
+
 
 function fieldX(x){
     return field.x()+ field.width()*x/144;
@@ -242,7 +305,7 @@ function fieldY(y){
 function saveState(){
     save = stage.toJSON();
 }
-
+var save = stage.toJSON();
 function reset(){
     stage = Konva.Node.create(save, 'container');
 }

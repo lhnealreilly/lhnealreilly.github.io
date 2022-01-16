@@ -9,24 +9,33 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@200&display=swap" rel="stylesheet" />
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@200&display=swap" rel="stylesheet" /> -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto+Slab|Roboto:300,400,500,700"
+        rel="stylesheet" />
+
     <style>
         body {
             background-color: #41B3A3;
         }
-        .konvajs-content{
+
+        .konvajs-content {
             display: inline-block;
         }
     </style>
 </head>
 
 <body>
-    <div class="split70 left"> 
+    <div class="split70 left">
         <div class="centered" id="container">
         </div>
     </div>
     <div class="split30 right">
-        <button onclick="addPath()" class="fill">Add Waypoint </button>
+        <div>
+            <button onclick="addPath()" class="fill">Add Spline Waypoint </button>
+            <button onclick="addSimplePath()" class="fill">Add Simple Waypoint </button>
+            <button onclick="copyPaths()" class="fill">Copy Paths to Clipboard </button>
+            <button onclick="downloadObjectAsJson()" class="fill">Download Waypoints as a JSON </button>
+        </div>
     </div>
     <script src=newApp.js></script
 </body>
