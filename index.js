@@ -1,9 +1,11 @@
 const NUM_WAYPOINTS = 20;
 
+const anchors = [];
+
 var ringPos = [{x:72, y:[6, 12, 18, 24, 48, 54, 60, 84, 90, 96, 120, 126, 132, 138]}, {x:48, y:[43.5, 48, 52.5, 67.5, 72, 76.5, 120]}, {x: 96, y:[24, 67.5, 72, 76.5, 91.5, 96, 100.5]}, 
 {x:43.5, y:[48, 72]}, {x:52.5, y:[48, 72]}, {x:91.5, y:[72, 96]}, {x:100.5, y:[72, 96]}, {x: 54, y: [120]}, {x:60, y:[120]}, {x:66, y:[120]}, {x: 78, y: [24]}, {x:84, y: [24]}, {x:90, y:[24]}];
 
-var width = window.innerWidth;
+var width = window.innerWidth/1.5;
 var height = window.innerHeight;
 
 var stage = new Konva.Stage({
@@ -23,7 +25,7 @@ var pathLayer = new Konva.Layer();
  */
 
 var field = new Konva.Rect({
-    x: stage.width()/3,
+    x: stage.width()/2,
     y: stage.height()/2,
     width: 800,
     height: 800,
@@ -175,6 +177,8 @@ pathLayer.add(tr2);
 anchor1.on('click', function(){toggleVis(tr1)});
 anchor2.on('click', function(){toggleVis(tr2)});
 
+anchors.push(anchor1, anchor2);
+
 tr1.on('transform', function(){updatePath(path1, anchor1, anchor2)});
 tr2.on('transform', function(){updatePath(path1, anchor1, anchor2)});
 
@@ -187,8 +191,8 @@ anchor2.on('dragmove', function(){
     updatePath(path1, anchor1, anchor2);
 });
 
-function updatePath(path, anchor1, anchor2){
-    path.points(drawPath(anchor1.x(), anchor1.y(), anchor1.rotation()-90, anchor2.x(), anchor2.y(), anchor2.rotation()-90));
+function updatePath(pathI, anchor1I, anchor2I){
+    pathI.points(drawPath(anchor1I.x(), anchor1I.y(), anchor1I.rotation()-90, anchor2I.x(), anchor2I.y(), anchor2I.rotation()-90));
 }
 
 function toggleVis(x){
@@ -200,6 +204,25 @@ function toggleVis(x){
         x.visible(true);
         x.moveToTop();
     }
+}
+
+function addPath(){
+    var newAnchor = pathAnchor.clone({x:anchors[anchors.length-1].x() + 30, y: anchors[anchors.length-1].y()});
+    var newTr = new Konva.Transformer({
+        nodes: [newAnchor],
+        visible: false,
+        resizeEnabled: false,
+    })
+    var newPath = path.clone();
+    anchors.push(newAnchor);
+    updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);
+    newAnchor.on('click', function(){toggleVis(newTr)});
+    newAnchor.on('dragmove', function(){updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
+    anchors[anchors.indexOf(newAnchor)-1].on('dragmove', function(){updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor);});
+    newTr.on('transform', function(){updatePath(newPath, anchors[anchors.indexOf(newAnchor)-1], newAnchor)});
+    pathLayer.add(newAnchor);
+    pathLayer.add(newTr);
+    pathLayer.add(newPath);
 }
 
 
