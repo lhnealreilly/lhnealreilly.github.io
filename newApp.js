@@ -266,7 +266,7 @@ function copyPaths() {
     let pathString = "";
     for(const p of paths){
         for(let i = 0; i < p.points().length; i+=2){
-            pathString += p.points()[i] + " " + p.points()[i+1] + ";";
+            pathString += realX(p.points()[i]) + " " + realY(p.points()[i+1]) + ";";
         }
     }
     navigator.clipboard.writeText(pathString);
@@ -278,7 +278,7 @@ function copyPaths() {
 function downloadObjectAsJson(){
     let exportObj = {waypoints: []};
     for(const a of anchors){
-        exportObj.waypoints.push({x: a.x(), y: a.y(), r: a.rotation()});
+        exportObj.waypoints.push({x: realX(a.x()), y: realY(a.y()), r: a.rotation()});
     }
     var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
     var downloadAnchorNode = document.createElement('a');
@@ -301,6 +301,12 @@ function fieldX(x){
 }
 function fieldY(y){
     return field.y() + field.height()*y/144;
+}
+function realX(x){
+    return (x-field.x())/field.width()*144;
+}
+function realY(y){
+    return (field.y() + field.height() -  y)/field.height()*144;
 }
 function saveState(){
     save = stage.toJSON();
